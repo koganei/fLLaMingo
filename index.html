@@ -123,8 +123,8 @@
             </select>
             <br><br>
             <label for="chat-system">System:</label>
-            <button value="Pretend to be a Software Architect for a big tech company." onclick="document.getElementById('chat-system').value = this.value">Software Architect</button>
-            <button value="Pretend to be an Executive Assistant for a big tech company." onclick="document.getElementById('chat-system').value = this.value">Executive Assistant</button>
+            <button value="Pretend to be a Software Architect for a big tech company. You are great at software technical design and communicating complex technical topics in an easy to grasp manner." onclick="document.getElementById('chat-system').value = this.value">Software Architect</button>
+            <button value="Pretend to be an Executive Assistant for a big tech company. You are great at understanding what is important and what can be left out. You are very insightful and are great at summarizing." onclick="document.getElementById('chat-system').value = this.value">Executive Assistant</button>
             <textarea id="chat-system" placeholder="What kind of system?"></textarea>
             <br><br>
             <label for="chat-doc-context">Document Context:</label>
@@ -132,9 +132,10 @@
             <textarea id="chat-doc-context" placeholder="Explain your document"></textarea>
             <br><br>
             <label for="chat-doc">Document:</label>
-            <textarea id="chat-doc" placeholder="Pasted your document"></textarea>
+            <textarea id="chat-doc" placeholder="Paste your document"></textarea>
             <br><br>
             <label for="chat-text">Prompt:</label>
+            <button value="Please provide a summary of the document. Please highlight any salient points, any action items that came up and anything that you feel should have been brought up but hasn't." onclick="document.getElementById('chat-text').value = this.value">Summarize</button>
             <textarea id="chat-text" placeholder="Type your message..."></textarea>
             <br><br>
             <input type="checkbox" id="confirm-send" checked>

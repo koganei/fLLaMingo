@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat with GPT</title>
+    <style>
+        :root {
+            --background-light: #ffffff;
+            --background-dark: #1a1a1a;
+            --text-light: #252525;
+            --text-dark: #f1f1f1;
+            --input-background-light: #f1f1f1;
+            --input-background-dark: #3d3d3d;
+            --button-background-light: #99b7dd;
+            --button-background-dark: #336699;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --background: var(--background-dark);
+                --text: var(--text-dark);
+                --input-background: var(--input-background-dark);
+                --button-background: var(--button-background-dark);
+            }
+        }
+
+        @media (prefers-color-scheme: light) {
+            :root {
+                --background: var(--background-light);
+                --text: var(--text-light);
+                --input-background: var(--input-background-light);
+                --button-background: var(--button-background-light);
+            }
+        }
+
+        body {
+            font-family: Georgia, serif;
+        }
+
+        textarea, input {
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--background);
+            color: var(--text);
+        }
+        .container {
+            display: flex;
+        }
+        .config {
+            width: 25%;
+            padding: 20px;
+        }
+        .chat {
+            width: 75%;
+            padding: 20px;
+        }
+        textarea, input, select, button {
+            background-color: var(--input-background);
+            color: var(--text);
+            border: 1px solid var(--text);
+        }
+        button {
+            background-color: var(--button-background);
+            padding: 5px 10px;
+            border-radius: 3px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: var(--button-background-dark);
+        }
+        textarea {
+            width: 100%;
+            height: 100px;
+            resize: none;
+            border-radius: 3px;
+            padding: 5px;
+        }
+        #chat-system {
+            height: 50px;
+        }
+        #generated-prompt {
+            height: 500px;
+        }
+        .chat-history {
+            border: 1px solid var(--text);
+            padding: 20px;
+            background-color: var(--input-background);
+            border-radius: 10px;
+        }
+        .chat-prompt, .chat-response {
+            margin-bottom: 1em;
+            border-radius: 10px;
+            padding: 1em;
+            color: var(--text);
+        }
+        .chat-prompt {
+            background: var(--button-background);
+            margin-left: 50px;
+        }
+        .chat-response {
+            background: #788ba0;
+            margin-right: 50px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="config">
+            <label for="api-key">API Key:</label>
+            <input type="text" id="api-key" placeholder="your_api_key_here">
+            <br><br>
+            <label for="model">Model:</label>
+            <select id="model">
+                <option value="gpt-3.5-turbo">gpt-3.5-turbo</option>
+                <option value="text-davinci-002">text-davinci-002</option>
+                <option value="text-curie-002">text-curie-002</option>
+                <option value="text-babbage-001">text-babbage-001</option>
+                <option value="text-ada-001">text-ada-001</option>
+            </select>
+            <br><br>
+            <label for="chat-system">System:</label>
+            <button value="Pretend to be a Software Architect for a big tech company." onclick="document.getElementById('chat-system').value = this.value">Software Architect</button>
+            <button value="Pretend to be an Executive Assistant for a big tech company." onclick="document.getElementById('chat-system').value = this.value">Executive Assistant</button>
+            <textarea id="chat-system" placeholder="What kind of system?"></textarea>
+            <br><br>
+            <label for="chat-doc-context">Document Context:</label>
+            <button value="Here is the transcript of a meeting about" onclick="document.getElementById('chat-doc-context').value = this.value">Meeting</button>
+            <textarea id="chat-doc-context" placeholder="Explain your document"></textarea>
+            <br><br>
+            <label for="chat-doc">Document:</label>
+            <textarea id="chat-doc" placeholder="Pasted your document"></textarea>
+            <br><br>
+            <label for="chat-text">Prompt:</label>
+            <textarea id="chat-text" placeholder="Type your message..."></textarea>
+            <br><br>
+            <input type="checkbox" id="confirm-send" checked>
+            <label for="confirm-send">Actually Send</label>
+            <button id="send-btn">Send</button>
+            <hr>
+            <label for="generated-prompt">Generated Prompt:</label>
+            <button id="copy-text" onclick="copyToClipboard()">Copy</button>
+            <textarea id="generated-prompt" readonly></textarea>
+        </div>
+        <div class="chat">
+            <h2>Conversation <span class="loading" style="display: none;">...</span></h2>
+            <div class="chat-history" id="chat-history">
+                <!-- <div class="chat-prompt">My Prompt Text</div>
+                <div class="chat-response">My Response Text</div> -->
+            </div>
+        </div>
+    </div>
+    <script>
+        const apiKeyInput = document.getElementById("api-key");
+        apiKeyInput.addEventListener("input", () => {
+            localStorage.setItem("apiKey", apiKeyInput.value);
+        });
+
+        document.addEventListener("DOMContentLoaded", () => {
+            const storedApiKey = localStorage.getItem("apiKey");
+            if (storedApiKey) apiKeyInput.value = storedApiKey;
+        });
+
+        document.getElementById("send-btn").addEventListener("click", async () => {
+            const converter = new showdown.Converter();
+            const apiKey = apiKeyInput.value;
+            const model = document.getElementById("model").value;
+            const chatSystem = document.getElementById("chat-system").value || "You are a helpful assistant.";
+            const chatDocContext = document.getElementById("chat-doc-context").value;
+            const chatDoc = document.getElementById("chat-doc").value;
+            const chatText = document.getElementById("chat-text").value;
+            const generatedPrompt = document.getElementById("generated-prompt");
+            const chatHistory = document.getElementById("chat-history");
+            const confirm = document.getElementById('confirm-send');
+
+            const prompt = chatDoc ? `${chatDocContext}:\n${chatDoc} \n---\n ${chatText}` : `${chatText}`;
+
+            generatedPrompt.value = `${chatSystem} \n---\n ${prompt}`;
+            
+            if(confirm.checked) {
+                chatHistory.innerHTML += `<div class="chat-prompt">${chatText}</div>`;
+            }
+
+            const requestOptions = {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${apiKey}`
+                },
+                body: JSON.stringify({
+                    "model": model,
+                    "messages": [{"role": "system", "content": chatSystem}, {"role": "user", "content": prompt}]
+                })
+            };
+
+            if(confirm.checked) {
+                try {
+                    document.querySelector(".loading").style.display = "inline-block";
+                    const response = await fetch("https://api.openai.com/v1/chat/completions", requestOptions);
+                    const data = await response.json();
+
+                    document.querySelector(".loading").style.display = "none";
+                    chatHistory.innerHTML += `<div class="chat-response">${converter.makeHtml(data.choices[0].message.content)}</div>`;
+                    chatHistory.scrollTop = chatHistory.scrollHeight;
+                } catch (error) {
+                    console.error("Error:", error);
+                }
+
+                document.getElementById("chat-text").value = "";
+            }
+            
+
+        });
+
+        function copyToClipboard() {
+            // Select the textarea
+            const textarea = document.getElementById("generated-prompt");
+            textarea.select();
+            
+            // Copy the selected text to clipboard
+            document.execCommand("copy");
+        }
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/showdown/2.1.0/showdown.min.js"></script>
+</body>
+</html>

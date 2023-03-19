@@ -156,6 +156,7 @@
     </div>
     <script>
         const apiKeyInput = document.getElementById("api-key");
+        const previousMessages = [];
         apiKeyInput.addEventListener("input", () => {
             localStorage.setItem("apiKey", apiKeyInput.value);
         });
@@ -193,7 +194,11 @@
                 },
                 body: JSON.stringify({
                     "model": model,
-                    "messages": [{"role": "system", "content": chatSystem}, {"role": "user", "content": prompt}]
+                    "messages": [
+                        {"role": "system", "content": chatSystem},
+                        ...previousMessages,
+                        {"role": "user", "content": prompt}
+                    ]
                 })
             };
 
@@ -202,6 +207,9 @@
                     document.querySelector(".loading").style.display = "inline-block";
                     const response = await fetch("https://api.openai.com/v1/chat/completions", requestOptions);
                     const data = await response.json();
+
+                    previousMessages.push({"role": "user", "content": prompt});
+                    previousMessages.push({"role": "assistant", "content": data.choices[0].message.content});
 
                     document.querySelector(".loading").style.display = "none";
                     chatHistory.innerHTML += `<div class="chat-response">${converter.makeHtml(data.choices[0].message.content)}</div>`;

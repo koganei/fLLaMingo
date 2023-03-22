@@ -155,6 +155,33 @@
         </div>
     </div>
     <script>
+        function chunkString(inputString) {
+            const chunkSize = 5000;
+            const chunks = [];
+            let start = 0;
+            let end = chunkSize;
+
+            while (start < inputString.length) {
+                if (end < inputString.length) {
+                const lastNewlineIndex = inputString.lastIndexOf("\n", end);
+
+                if (lastNewlineIndex !== -1) {
+                    end = lastNewlineIndex;
+                }
+                } else {
+                end = inputString.length;
+                }
+
+                const chunk = inputString.slice(start, end);
+                chunks.push(chunk);
+
+                start = end;
+                end += chunkSize;
+            }
+
+            return chunks;
+        }
+
         const apiKeyInput = document.getElementById("api-key");
         const previousMessages = [];
         apiKeyInput.addEventListener("input", () => {
@@ -178,9 +205,31 @@
             const chatHistory = document.getElementById("chat-history");
             const confirm = document.getElementById('confirm-send');
 
-            const prompt = chatDoc ? `${chatDocContext}:\n${chatDoc} \n---\n ${chatText}` : `${chatText}`;
 
-            generatedPrompt.value = `${chatSystem} \n---\n ${prompt}`;
+            chunkedDoc = chunkString(chatDoc);
+
+            if(!chatDoc || chunkedDoc.length <= 1) {
+                const prompt = chatDoc ? `${chatDocContext}:\n${chatDoc} \n---\n ${chatText}` : `${chatText}`;
+
+                generatedPrompt.value = `${chatSystem} \n---\n ${prompt}`;
+            } else {
+                let chunkedPrompts = chunkedDoc.map((element, i) => {
+                    let prompt = '';
+                    if(i === 0) {
+                        prompt = `${chatDocContext}:\n${element}`;
+                    } else {
+                        prompt = "I didn't give you the whole document. Here is another part:\n" + element;
+                    }
+
+                    prompt += `\n---\n`;
+
+                    return prompt;
+                });
+
+                chunkedPrompts.push(`${chatText}`)
+
+                generatedPrompt.value = `${chatSystem} \n---\n ${chunkedPrompts.join('\n')}`;
+            }
             
             if(confirm.checked) {
                 chatHistory.innerHTML += `<div class="chat-prompt">${chatText}</div>`;

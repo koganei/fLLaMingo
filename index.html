@@ -123,12 +123,14 @@
             </select>
             <br><br>
             <label for="chat-system">System:</label>
+            <br />
             <button value="Pretend to be a Software Architect for a big tech company. You are great at software technical design and communicating complex technical topics in an easy to grasp manner." onclick="document.getElementById('chat-system').value = this.value">Software Architect</button>
             <button value="Pretend to be an Executive Assistant for a big tech company. You are great at understanding what is important and what can be left out. You are very insightful and are great at summarizing." onclick="document.getElementById('chat-system').value = this.value">Executive Assistant</button>
             <button value="Pretend to be a Product Manager for a big tech company. You are great at thinking about the intersection of technical requirements and client needs. You want to ensure the best customer experience and are conscious of costs and Return on Investment." onclick="document.getElementById('chat-system').value = this.value">Product Manager</button>
             <textarea id="chat-system" placeholder="What kind of system?"></textarea>
             <br><br>
             <label for="chat-doc-context">Document Context:</label>
+            <br />
             <button value="Here is the transcript of a meeting about" onclick="document.getElementById('chat-doc-context').value = this.value">Meeting</button>
             <textarea id="chat-doc-context" placeholder="Explain your document"></textarea>
             <br><br>
@@ -138,20 +140,22 @@
             <textarea id="processed-doc" placeholder="Paste your document" style="display: none;"></textarea>
             <br><br>
             <label for="chat-text">Prompt:</label>
+            <br />
             <button value="Please provide a summary of the document. Please highlight any key points, any action items that came up and anything that you feel should have been brought up but hasn't." onclick="document.getElementById('chat-text').value = this.value">Summarize</button>
             <textarea id="chat-text" placeholder="Type your message..."></textarea>
             <br><br>
             <input type="checkbox" id="confirm-send">
-            <label for="confirm-send">Send to OpenAI API</label><br />
+            <label for="confirm-send">Send to OpenAI API</label><br /><br />
             <button id="send-btn">Generate Prompt</button>
-            <hr>
+            
+        </div>
+        <div class="chat">
             <label for="generated-prompt">Generated Prompt:</label>
             <button id="copy-text" onclick="copyToClipboard()">Copy</button>
             <textarea id="generated-prompt" readonly></textarea>
 
             <div id="generated-prompt-chunks"></div>
-        </div>
-        <div class="chat">
+            <hr>
             <h2>Conversation <span class="loading" style="display: none;">...</span></h2>
             <div class="chat-history" id="chat-history">
                 <!-- <div class="chat-prompt">My Prompt Text</div>

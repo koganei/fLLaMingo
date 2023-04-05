@@ -133,6 +133,8 @@
             <br><br>
             <label for="chat-doc">Document:</label>
             <textarea id="chat-doc" placeholder="Paste your document"></textarea>
+            <button onclick="window.processVTT()">Process VTT File</button>
+            <textarea id="processed-doc" placeholder="Paste your document" style="display: none;"></textarea>
             <br><br>
             <label for="chat-text">Prompt:</label>
             <button value="Please provide a summary of the document. Please highlight any salient points, any action items that came up and anything that you feel should have been brought up but hasn't." onclick="document.getElementById('chat-text').value = this.value">Summarize</button>
@@ -145,6 +147,8 @@
             <label for="generated-prompt">Generated Prompt:</label>
             <button id="copy-text" onclick="copyToClipboard()">Copy</button>
             <textarea id="generated-prompt" readonly></textarea>
+
+            <div id="generated-prompt-chunks"></div>
         </div>
         <div class="chat">
             <h2>Conversation <span class="loading" style="display: none;">...</span></h2>
@@ -194,17 +198,19 @@
         });
 
         document.getElementById("send-btn").addEventListener("click", async () => {
+            const promptChunks = document.getElementById("generated-prompt-chunks");
             const converter = new showdown.Converter();
             const apiKey = apiKeyInput.value;
             const model = document.getElementById("model").value;
             const chatSystem = document.getElementById("chat-system").value || "You are a helpful assistant.";
             const chatDocContext = document.getElementById("chat-doc-context").value;
-            const chatDoc = document.getElementById("chat-doc").value;
+            const chatDoc = document.getElementById("processed-doc").value ? document.getElementById("processed-doc").value : document.getElementById("chat-doc").value;
             const chatText = document.getElementById("chat-text").value;
             const generatedPrompt = document.getElementById("generated-prompt");
             const chatHistory = document.getElementById("chat-history");
             const confirm = document.getElementById('confirm-send');
 
+            promptChunks.innerHTML = '';
 
             chunkedDoc = chunkString(chatDoc);
 
@@ -218,7 +224,7 @@
                     if(i === 0) {
                         prompt = `${chatDocContext}:\n${element}`;
                     } else {
-                        prompt = "I didn't give you the whole document. Here is another part:\n" + element;
+                        prompt = `I didn't give you the whole document.\n${chatDocContext}\n.\n\n Here is another part:\n${element}`;
                     }
 
                     prompt += `\n---\n`;
@@ -228,7 +234,15 @@
 
                 chunkedPrompts.push(`${chatText}`)
 
-                generatedPrompt.value = `${chatSystem} \n---\n ${chunkedPrompts.join('\n')}`;
+                generatedPrompt.value = `${chatSystem} \n---\n ${chunkedPrompts.join('\n')} \n ${chatText}`;
+
+                chunkedPrompts.forEach((element, i) => {
+                    promptChunks.innerHTML += `
+                    <button id="copy-text-${i}" onclick="copyToClipboard(${i})">Copy ${i}</button>
+                    <textarea id="generated-prompt-chunk-${i}" readonly>${chatSystem} \n---\n ${element} \n---\n  ${chatText} </textarea>
+                `;
+                });
+
             }
             
             if(confirm.checked) {
@@ -273,13 +287,49 @@
 
         });
 
-        function copyToClipboard() {
+        function copyToClipboard(index) {
+            
             // Select the textarea
-            const textarea = document.getElementById("generated-prompt");
+            const textarea = index !== false ? document.getElementById(`generated-prompt-chunk-${index}`) : document.getElementById("generated-prompt");
             textarea.select();
             
             // Copy the selected text to clipboard
             document.execCommand("copy");
+
+            document.getElementById(`copy-text-${index}`).innerHTML = "Copied!";
+
+            setTimeout(() => {
+                document.getElementById(`copy-text-${index}`).innerHTML = `Copy ${index}`;
+            }, 2000);
+        }
+
+        function processVTT() {
+            const vtt = document.getElementById("chat-doc").value;
+            const lines = vtt.split('\n');
+            const timecodes = lines.filter(line => line.includes('-->'));
+            let text = lines.filter(line => !line.includes('-->'));
+
+            // if the line start with <v First Last> where 'First' is any name and 'Last' is any name, replace with 'First:'
+            const namePattern = /<v (\w+) (\w+)>/;
+
+            text = text.map(line => {
+                const match = line.match(namePattern);
+                if (match) {
+                    return line.replace(namePattern, `${match[1]}:`);
+                } else {
+                    return line;
+                }
+            });            
+
+            // remove the '</v>' string from the end of each line
+            text = text.map(line => line.replace('</v>', ''));
+
+            // remove empty lines
+            text = text.filter(line => line !== '');
+
+
+            document.getElementById("processed-doc").value = text.join('\n');
+            document.getElementById("processed-doc").style.display = 'block';
         }
     </script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/showdown/2.1.0/showdown.min.js"></script>

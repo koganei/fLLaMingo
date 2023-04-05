@@ -144,22 +144,26 @@
             <button value="Please provide a summary of the document. Please highlight any key points, any action items that came up and anything that you feel should have been brought up but hasn't." onclick="document.getElementById('chat-text').value = this.value">Summarize</button>
             <textarea id="chat-text" placeholder="Type your message..."></textarea>
             <br><br>
-            <input type="checkbox" id="confirm-send">
+            <input type="checkbox" onclick="window.switchOutput()" id="confirm-send">
             <label for="confirm-send">Send to OpenAI API</label><br /><br />
             <button id="send-btn">Generate Prompt</button>
             
         </div>
         <div class="chat">
-            <label for="generated-prompt">Generated Prompt:</label>
-            <button id="copy-text" onclick="copyToClipboard()">Copy</button>
-            <textarea id="generated-prompt" readonly></textarea>
+            <div class="prompt-generation-area">
+                <label for="generated-prompt">Generated Prompt:</label>
+                <button id="copy-text" onclick="copyToClipboard()">Copy</button>
+                <textarea id="generated-prompt" readonly></textarea>
+    
+                <div id="generated-prompt-chunks"></div>
+            </div>
 
-            <div id="generated-prompt-chunks"></div>
-            <hr>
-            <h2>Conversation <span class="loading" style="display: none;">...</span></h2>
-            <div class="chat-history" id="chat-history">
-                <!-- <div class="chat-prompt">My Prompt Text</div>
-                <div class="chat-response">My Response Text</div> -->
+            <div class="conversation-area" style="display:none">
+                <h2>Conversation <span class="loading" style="display: none;">...</span></h2>
+                <div class="chat-history" id="chat-history">
+                    <!-- <div class="chat-prompt">My Prompt Text</div>
+                    <div class="chat-response">My Response Text</div> -->
+                </div>
             </div>
         </div>
     </div>
@@ -335,6 +339,18 @@
 
             document.getElementById("processed-doc").value = text.join('\n');
             document.getElementById("processed-doc").style.display = 'block';
+        }
+
+        function switchOutput() {
+            const isChecked = document.getElementById('confirm-send').checked;
+
+            if(isChecked) {
+                document.querySelector('.prompt-generation-area').style.display = 'none';
+                document.querySelector('.conversation-area').style.display = 'block';
+            } else {
+                document.querySelector('.conversation-area').style.display = 'none';
+                document.querySelector('.prompt-generation-area').style.display = 'block';
+            }
         }
     </script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/showdown/2.1.0/showdown.min.js"></script>

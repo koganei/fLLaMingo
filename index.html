@@ -310,7 +310,7 @@
             let text = lines.filter(line => !line.includes('-->'));
 
             // if the line start with <v First Last> where 'First' is any name and 'Last' is any name, replace with 'First:'
-            const namePattern = /<v (\w+) (\w+)>/;
+            const namePattern = /<v (\w+) ([^>]+)>/;
 
             text = text.map(line => {
                 const match = line.match(namePattern);

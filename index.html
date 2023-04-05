@@ -140,9 +140,9 @@
             <button value="Please provide a summary of the document. Please highlight any key points, any action items that came up and anything that you feel should have been brought up but hasn't." onclick="document.getElementById('chat-text').value = this.value">Summarize</button>
             <textarea id="chat-text" placeholder="Type your message..."></textarea>
             <br><br>
-            <input type="checkbox" id="confirm-send" checked>
-            <label for="confirm-send">Actually Send</label>
-            <button id="send-btn">Send</button>
+            <input type="checkbox" id="confirm-send">
+            <label for="confirm-send">Send to OpenAI API</label><br />
+            <button id="send-btn">Generate Prompt</button>
             <hr>
             <label for="generated-prompt">Generated Prompt:</label>
             <button id="copy-text" onclick="copyToClipboard()">Copy</button>
